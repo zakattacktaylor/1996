@@ -1,0 +1,70 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
+#include <iostream.h>
+extern "C" {
+	#include "modex.h"
+}
+#include "types.h"
+#include "shape.h"
+#include "anim_sys.h"
+#include "vector.h"
+#include "light.h"
+#include "polygons.h"
+#include <math.h>
+#include <dos.h>
+#include "keyboard.h"
+
+boolean shut_down = no;
+boolean space = no;
+
+#include "cube.dat"
+#include "ring.dat"
+#include "diamond.dat"
+
+void main()
+{
+	shape *ring;
+	shape *cube;
+	shape *diamond;
+
+	init_sincos();
+	init_light(40,40,40);
+
+	init_shapes(3);
+	cube = new_shape(8, 6, &p_cube[0], &s_cube[0], -55, -25, 250);
+	ring = new_shape(32, 32, &p_ring[0], &s_ring[0], 5, 25, 350);
+	diamond = new_shape(9, 9, &p_diamond[0], &s_diamond[0], 75, 75, 350);
+	init_polygons(32+6+9);
+
+	init_anim();
+
+	twist_light(16,64,0);
+
+	while (shut_down == no)
+	{
+		if (space) wait_for_key(' ');
+		if (kbhit()) key_action();
+
+		draw_shapes();
+
+		ring->xan++;
+		ring->yan--;
+		ring->zan++;
+
+		cube->xan++;
+		cube->yan--;
+		cube->zan++;
+
+		diamond->xan++;
+		diamond->yan--;
+		diamond->zan++;
+
+		flip_page();
+
+		//twist_light(-1,1,2);
+	}
+
+	kill_anim();
+}

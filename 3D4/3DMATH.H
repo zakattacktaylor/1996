@@ -1,0 +1,183 @@
+#include "sindat.h"
+#include <math.h>
+
+#define ang_nin 256
+#define sin_div 18
+#define pi 3.1452
+
+long a_sin(unsigned int ang)
+{
+	float g;
+	float h=ang;
+
+	g=360*h/65536*pi/180;
+	g=sin(g)*32768*2*2*2;
+	return(g);
+
+	/* quad I */
+	//if(ang<ang_nin) return(s_t[ang]);
+
+	/* quad II */
+	//if(ang<2*ang_nin) return(s_t[256-(2*ang_nin-ang)]);
+
+	/* quad III */
+	//if(ang<3*ang_nin) return(-s_t[(ang-2*ang_nin)]);
+
+	/* quad IV */
+	//return(-s_t[(4*ang_nin-ang)]);
+}
+
+long a_cos(unsigned int ang)
+{
+	float g;
+	float h=ang;
+
+	g=360*h/65536*pi/180;
+	g=cos(g)*32768*2*2*2;
+	return(g);
+
+	/* quad I */
+	//if(ang<ang_nin) return(s_t[ang_nin-ang]);
+
+	/* quad II */
+	//if(ang<2*ang_nin) return(-s_t[(ang-ang_nin)]);
+
+	/* quad III */
+	//if(ang<3*ang_nin) return(-s_t[((3*ang_nin)-ang)]);
+
+	/* quad IV */
+	//return(s_t[(ang-(3*ang_nin))]);
+}
+
+void set_matrix(void)
+{
+	cx=a_cos(gxan);
+	sx=a_sin(gxan);
+	cy=a_cos(gyan);
+	sy=a_sin(gyan);
+	cz=a_cos(gzan);
+	sz=a_sin(gzan);
+}
+
+void set_eye_matrix(void)
+{
+	ecx=a_cos(camera.xan);
+	esx=a_sin(camera.xan);
+	ecy=a_cos(camera.yan);
+	esy=a_sin(camera.yan);
+	ecz=a_cos(camera.zan);
+	esz=a_sin(camera.zan);
+}
+
+void obj2world(int c)
+{
+	gx=lx+objects[c].x;
+	gy=ly+objects[c].y;
+	gz=lz+objects[c].z;
+}
+
+void world2cam(int c)
+{
+	gx-=camera.x;
+	gy-=camera.y;
+	gz-=camera.z;
+}
+
+void screen_center(void)
+{
+	gx+=viewX;
+	gy+=viewY;
+}
+
+int on_screen(int *x, int *y)
+{
+	if (*x<x_left_clip) return 0;
+	if (*x>x_right_clip) return 0;
+	if (*y>y_top_clip) return 0;
+	if (*y<y_bottom_clip) return 0;
+	return 1;
+}
+
+void depth_emul(void)
+{
+	long ex,ey;
+	if(gz==0) return;
+	gx=gx*focus/gz;
+	gy=gy*focus/gz;
+}
+
+void rotate_pt(void)
+{
+	long xt,yt,zt;
+
+	yt=(ly*cx-lz*sx) >> sin_div;
+	zt=(ly*sx+lz*cx) >> sin_div;
+	ly=yt;
+	lz=zt;
+
+	xt=(lx*cy-lz*sy) >> sin_div;
+	zt=(lx*sy+lz*cy) >> sin_div;
+	lx=xt;
+	lz=zt;
+
+	xt=(lx*cz-ly*sz) >> sin_div;
+	yt=(lx*sz+ly*cz) >> sin_div;
+	lx=xt;
+	ly=yt;
+
+}
+
+void rotate_eye_pt(void)
+{
+	long xt,yt,zt;
+
+	yt=(gy*ecx-gz*esx) >> sin_div;
+	zt=(gy*esx+gz*ecx) >> sin_div;
+	gy=yt;
+	gz=zt;
+
+	xt=(gx*ecy-gz*esy) >> sin_div;
+	zt=(gx*esy+gz*ecy) >> sin_div;
+	gx=xt;
+	gz=zt;
+
+	xt=(gx*ecz-gy*esz) >> sin_div;
+	yt=(gx*esz+gy*ecz) >> sin_div;
+	gx=xt;
+	gy=yt;
+
+}
+
+long distance(long x1,long y1,long z1)
+{
+	long temp=((x1-camera.x)*(x1-camera.x))+((y1-camera.y)*(y1-camera.y))+((z1-camera.z)*(z1-camera.z));
+	return((long)sqrtl(temp));
+}
+
+void check_visible(void)
+{
+	int p;
+
+		if (x1<=x2) goto check_now;
+		p=x1;
+		x1=x2;
+		x2=x3;
+		x3=p;
+		p=y1;
+		y1=y2;
+		y2=y3;
+		y3=p;
+
+		if (x1<=x2) goto check_now;
+		p=x1;
+		x1=x2;
+		x2=x3;
+		x3=p;
+		p=y1;
+		y1=y2;
+		y2=y3;
+		y3=p;
+
+check_now:                
+		gVis=(x3-x1)*(y2-y1)-(x2-x1)*(y3-y1);
+}

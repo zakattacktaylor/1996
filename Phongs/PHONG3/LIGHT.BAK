@@ -1,0 +1,20 @@
+/* LIGHT.CPP
+*/
+#include "types.h"
+#include "math.h"
+#include "light.h"
+
+extern s16vector *light;
+extern s16vector *pt;
+extern s16vector *pt2;
+
+u8bit intensity()
+{
+	float average = 0;
+
+	average += cos(abs(pt2->x - light->x) * pi / 180);
+	average += cos(abs(pt2->y - light->y) * pi / 180);
+	average += cos(abs(pt2->z - light->z) * pi / 180);
+	average *= 85.33333;
+	return average;
+}

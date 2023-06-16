@@ -1,0 +1,36 @@
+/* LIGHT.CPP
+*/
+#include <iostream.h>
+#include "types.h"
+#include "math.h"
+#include "light.h"
+
+extern vector *pt;
+extern vector *pt2;
+extern float tcos[256];
+
+vector *light;
+
+void init_light(s16bit x, s16bit y, s16bit z)
+{
+	light = new vector;
+	light->x = x;
+	light->y = y;
+	light->z = z;
+
+	cout << "light initialized\n";
+}
+
+u8bit intensity()
+{
+	float l = 0;
+	u8bit c;
+
+	l += (pt2->x - light->x);
+	l += (pt2->y - light->y);
+	l += (pt2->z - light->z);
+	l = l / 3;
+	c = l;
+	if ((c > 64)&&(c < 192)) return 0;
+	return 256 * tcos[(u8bit)l];
+}

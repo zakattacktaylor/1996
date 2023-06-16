@@ -1,0 +1,21 @@
+#include "polytype.def"
+
+vector p_diamond[] = {20,40,-40,0,
+			   40,40,-20,0,
+			   40,40,20,0,
+			   20,40,40,0,
+			   -20,40,40,0,
+			   -40,40,20,0,
+			   -40,40,-20,0,
+			   -20,40,-40,0,
+			   0,-40,0,0};
+s16bit s_diamond[] = {
+gouraud,normal,64,0,0,0,0,1,8,0,
+gouraud,normal,64,0,0,0,0,1,2,3,4,5,6,7,0,
+gouraud,normal,64,0,0,0,1,2,8,1,
+gouraud,normal,64,0,0,0,2,3,8,2,
+gouraud,normal,64,0,0,0,3,4,8,3,
+gouraud,normal,64,0,0,0,4,5,8,4,
+gouraud,normal,64,0,0,0,5,6,8,5,
+gouraud,normal,64,0,0,0,6,7,8,6,
+gouraud,normal,64,0,0,0,7,0,8,7};

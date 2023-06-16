@@ -1,0 +1,13 @@
+/* LIGHT.CPP
+*/
+
+u8bit intensity()
+{
+	float average = 0;
+
+	average += cos((pt2->x - light->x));
+	average += cos((pt2->y - light->y));
+	average += cos((pt2->z - light->z));
+	average = average / 3;
+	return average * 256;
+}

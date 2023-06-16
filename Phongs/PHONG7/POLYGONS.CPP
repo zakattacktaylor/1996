@@ -1,0 +1,194 @@
+/* POLYGONS.CPP
+*/
+
+#include <stdio.h>
+#include "types.h"
+#include "line.h"
+#include "polygons.h"
+#include "vector.h"
+extern "C" {
+	#include "modex.h"
+}
+
+
+const s16bit vertices = 8;
+extern s16vector *pt;
+extern s16vector r_points[vertices];
+
+s16bit d_buff[400];
+s16bit u_buff[400];
+
+const s16bit polygons = 6;
+s16bit *poly;
+s16bit polys[polygons * 5] = {  0,1,2,3,0,
+				4,5,6,7,4,
+				4,0,3,7,4,
+				7,3,2,6,7,
+				2,1,5,6,2,
+				0,4,5,1,0};
+s16bit averages[polygons];
+s16bit indexes[polygons];
+s16bit y_min;
+s16bit y_max;
+u16bit visible_polygons;
+
+s16bit distance()
+{
+	s16bit i;
+	s16bit z;
+	s16bit first;
+
+	pt = &r_points[0];
+	z = 0;
+	first = *poly;
+	if (pt[*poly].z <= 0) return -1;
+	z += pt[*poly].z;
+	poly++;
+
+	for (i = 1; i < 255; i++)
+	{
+		if (*poly == first) return z;
+		if (pt[*poly].z <= 0) return -1;
+		z += pt[*poly].z;
+		poly++;
+	}
+
+	return z;
+}
+
+void init_polygons()
+{
+}
+
+void update_polygons()
+{
+	s16bit i;
+	u8bit color;
+
+	poly = &polys[0];
+	visible_polygons = 0;
+
+	for (i = 0; i < polygons; i++)
+	{
+		averages[visible_polygons] = distance();
+		if (averages[visible_polygons] > 0)
+		{
+			indexes[visible_polygons] = i;
+			visible_polygons++;
+		}
+	}
+       /*
+	for (i = 0; i < visible_polygons; i++)
+		printf("%d, %d\n", averages[i], indexes[i]);
+        */
+	sort_polygons();
+	/*
+	printf("SORT\n");
+	for (i = 0; i < visible_polygons; i++)
+		printf("%d, %d\n", averages[i], indexes[i]);
+	 */
+	for (i = 0; i < visible_polygons; i++)
+	{
+		poly = &polys[5*indexes[i]];
+		color = (indexes[i] * 5);
+		fill_polygon(&color);
+		//line_poly(&color);
+	}
+}
+
+void sort_polygons()
+{
+	s16bit tmp,tmp1,i,k,j;
+	s16bit found=0;
+
+	for (k = 1; k < visible_polygons; k++)
+	{
+		tmp=averages[k];
+		tmp1=indexes[k];
+		i=k-1;
+		found=0;
+		while ((i>=0) &&(!found)) {
+			if (tmp > averages[i]) {
+				averages[i+1]=averages[i];
+				indexes[i+1]=indexes[i];
+				i--;
+			}
+			else found=1;
+		}
+		averages[i+1]=tmp;
+		indexes[i+1]=tmp1;
+	}
+}
+
+void fill_polygon(u8bit *color)
+{
+	s16bit i;
+	u8bit prev_dir;
+	u8bit dir;
+	s16bit *a, *b;
+	s16bit *ind;
+	u16bit first;
+
+	pt = &r_points[0];
+	y_min = 20000;
+	y_max = -20000;
+	first = poly[0];
+
+	if (pt[poly[0]].y < y_min) y_min = pt[poly[0]].y;
+	if (pt[poly[0]].y > y_max) y_max = pt[poly[0]].y;
+
+	if (pt[poly[0]].y > pt[poly[1]].y)
+		trace_2d(poly[0], poly[1], &d_buff[0]);
+	else
+		trace_2d(poly[0], poly[1], &u_buff[0]);
+
+	for (i = 1; i < 255; i++)
+	{
+		if (pt[poly[i]].y < y_min) y_min = pt[poly[i]].y;
+		if (pt[poly[i]].y > y_max) y_max = pt[poly[i]].y;
+
+		if (pt[poly[i]].y > pt[poly[i+1]].y)
+			trace_2d(poly[i], poly[i+1], &d_buff[0]);
+		else
+			trace_2d(poly[i], poly[i+1], &u_buff[0]);
+
+		if (poly[i+1] == first) break;
+	}
+
+	if (y_min < 0) y_min = 0;
+	if (y_min > 399) return;
+	if (y_max < 0) return;
+	if (y_max > 399) y_max = 399;
+
+	a = &d_buff[y_min];
+	b = &u_buff[y_min];
+
+	for (i = y_min; i <= y_max; i++)
+	{
+
+		if (*a < 0) *a = 0;
+		if (*a > 319) *a = 319;
+		if (*b < 0) *b = 0;
+		if (*b > 319) *b = 319;
+
+		fill_block(*a, i, *b, i, *color);
+
+		a++;
+		b++;
+	}
+}
+
+void line_poly(u8bit *color)
+{
+	s16bit i;
+
+	pt = &r_points[0];
+
+	for (i = 0; i < 4; i++)
+	{
+		//printf("%d, ", pt[poly[i]]);
+		//if (i == 3) printf("\n");
+		//draw_point(&pt[poly[i]], color + i);
+		draw_2d(&pt[poly[i]], &pt[poly[i+1]], color);
+	}
+}

@@ -1,0 +1,23 @@
+Publics by module
+
+modex   	size = 3508
+	CLEAR_VGA_SCREEN                  COPY_BITMAP
+	COPY_PAGE                         DRAW_BITMAP
+	DRAW_LINE                         FILL_BLOCK
+	GET_ACTIVE_PAGE                   GET_DAC_REGISTER
+	GET_DISPLAY_PAGE                  GET_X_OFFSET
+	GET_Y_OFFSET                      GPRINTC
+	LOAD_DAC_REGISTERS                PRINT_STR
+	READ_DAC_REGISTERS                READ_POINT
+	SET_ACTIVE_PAGE                   SET_DAC_REGISTER
+	SET_DISPLAY_FONT                  SET_DISPLAY_PAGE
+	SET_MODEX                         SET_POINT
+	SET_VGA_MODEX                     SET_WINDOW
+	SYNC_DISPLAY                      TDRAW_BITMAP
+	TGPRINTC                          TPRINT_STR
+
+utils   	size = 306
+	DOS_PRINT                         DOS_PRINTS
+	INIT_RANDOM                       INT_SQR
+	RANDOM_INT                        SCAN_KEYBOARD
+	SET_VIDEO_MODE                    TIMER_COUNT

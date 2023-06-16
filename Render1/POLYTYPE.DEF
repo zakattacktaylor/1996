@@ -1,0 +1,9 @@
+#define normal 0
+#define reverse 1
+
+#define solid_line 0
+#define shaded_line 1
+#define gouraud_line 2
+#define solid 3
+#define shaded 4
+#define gouraud 5

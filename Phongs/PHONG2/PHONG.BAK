@@ -1,0 +1,118 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
+extern "C" {
+	#include "modex.h"
+}
+#include "types.h"
+#include "anim_sys.h"
+#include "vector.h"
+
+#define vertices 2500
+#define size 127;
+
+s16vector *pt, *pt2;
+s16vector points[vertices];
+s16vector r_points[vertices];
+
+u8bit xan = 0;
+u8bit yan = 0;
+u8bit zan = 0;
+
+u8bit color;
+s16vector *light;
+
+FILE *disc;
+
+void main()
+{
+	boolean shut_down = no;
+	u8bit key;
+	s16bit i;
+
+	light->x = 0;
+	light->y = 0;
+	light->z = -size;
+
+	init_sincos();
+
+	disc = fopen("phongdat.dsc", "r");
+	if (disc == NULL)
+	{
+		printf("error: disc_init -> can't find \"phongdat.dsc\"\n");
+		exit(0);
+	}
+	printf("disc initialized\n");
+
+	pt = &points[0];
+	pt2 = &r_points[0];
+
+	randomize();
+
+	for (i = 0; i < vertices; i++)
+	{
+		points[i].x = size;
+		points[i].y = size;
+		points[i].z = size;
+		//xan = random(256);
+		//yan = random(256);
+		//zan = random(256);
+		xan+=4;
+		if (xan == 252) yan+=4;
+		if (yan == 252) zan+=4;
+		set_matrix(&xan, &yan, &zan);
+		rotate();
+		points[i].x = r_points[i].x;
+		points[i].y = r_points[i].y;
+		points[i].z = r_points[i].z;
+		printf("%d,%d,%d\n",points[i].x, points[i].y, points[i].z);
+		pt++;
+		pt2++;
+	}
+	while (!kbhit()) {}
+
+	init_anim();
+
+	while (shut_down == no)
+	{
+		if (kbhit())
+		{
+			key = getch();
+			switch (key)
+			{
+				case 27:
+					shut_down = yes;
+					break;
+			}
+		}
+
+		set_matrix(&xan, &yan, &zan);
+
+		pt = &points[0];
+		pt2 = &r_points[0];
+
+		for (i = 0; i < vertices; i++)
+		{
+			rotate();
+			/* move the shape back */
+			//if (visible()) goto not_visible;
+			color = intensity();
+			pt2->z += 450;
+			depth_emulate();
+			view_adjust();
+			if (!on_screen()) goto not_visible;
+			draw_point();
+not_visible:
+			pt++;
+			pt2++;
+		}
+
+		flip_page();
+		xan++;
+		yan++;
+		zan++;
+	}
+
+	kill_anim();
+}

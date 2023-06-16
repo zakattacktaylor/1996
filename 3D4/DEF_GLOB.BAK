@@ -1,0 +1,94 @@
+//TYPEDEFS
+typedef struct {
+		char visible;
+		int x;
+		int y;
+		int z;
+		unsigned int xan;
+		unsigned int yan;
+		unsigned int zan;
+		int vertices;
+		int sides;
+		int* data;
+		int* sdata;
+		int* temp;
+	} tobject;
+
+//DEFINES
+#define maxstars 500
+
+#define vga_mode 1
+#define screen_width 320
+#define screen_height 400
+
+#define sxan 0
+#define syan 180
+#define szan 0
+#define maxsides 40
+#define maxpoints 40
+#define maxpolys 100
+#define y_top_clip 399
+#define y_bottom_clip 0
+#define x_right_clip 319
+#define x_left_clip 0
+
+#define viewX 160
+#define viewY 200
+//GLOBALS
+long focus=1000;
+#define foc_max 2000000000
+#define foc_min 10
+#define foc_chg 50
+int s_p[maxpolys*3];
+int polys_drawn=0;
+char pressed=0;
+char space;
+int threetimes[maxpoints];
+int tentimes[maxpolys];
+int indexes[maxsides];
+int averages[maxsides];
+time_t t;
+tobject* objects;
+tobject camera;
+int numobjects;
+int stars[maxstars*3];
+int ste[maxstars*3];
+long glob_x;
+long glob_y;
+char VIDEO_ON=0;
+char STARS_ON=0;
+char OBJECTS_ON=0;
+unsigned int gxan;
+unsigned int gyan;
+unsigned int gzan;
+long gx,gy,gz;
+int poly_shades;
+int curious;
+int view_dist;
+int ch1=80;
+int ch2=160;
+int ch3=240;
+long lx,ly,lz;
+long cx,cy,cz,sx,sy,sz;
+long ecx,ecy,ecz,esx,esy,esz;
+int vertices;
+int gVis;
+int poly_color;
+int poly_sides=4;
+int sides[4];
+int* points;
+int maxy;
+int maxyindex;
+int minyindex;
+int miny;
+int maxx;
+int maxxindex;
+int minx;
+int minxindex;
+int* lineme;
+int array_one[screen_height];
+int array_two[screen_height];
+int x_zarr[screen_width];
+int y_zarr[screen_height];
+
+int x1,y1,x2,y2,x3,y3;

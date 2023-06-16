@@ -1,0 +1,52 @@
+//TYPEDEFS
+typedef struct {
+                char visible;
+                int x;
+		int y;
+		int z;
+		int xan;
+		int yan;
+		int zan;
+		int vertices;
+		int sides;
+		int* data;
+		int* sdata;
+		int* temp;
+	} tobject;
+
+//DEFINES
+#define maxstars 500
+#define sxan 0
+#define syan 180
+#define szan 0
+#define maxsides 40
+#define maxpoints 40
+#define maxpolys 40
+
+//GLOBALS
+int threetimes[maxpoints];
+int tentimes[maxpolys];
+int indexes[maxsides];
+int averages[maxsides];
+tobject* objects;
+tobject camera;
+int numobjects;
+int stars[maxstars*3];
+int ste[maxstars*3];
+long glob_x;
+long glob_y;
+char VIDEO_ON=0;
+char STARS_ON=0;
+char OBJECTS_ON=0;
+int gxan;
+int gyan;
+int gzan;
+int gx,gy,gz;
+int poly_shades;
+int curious;
+int view_dist;
+int ch1=80;
+int ch2=160;
+int ch3=240;
+long lx,ly,lz;
+int cx,cy,cz,sx,sy,sz;

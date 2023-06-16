@@ -1,0 +1,103 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
+#include "modex.h"
+#include "types.h"
+#include "anim_sys.h"
+#include "vector.h"
+
+#define vertices 8
+#define size 50
+
+s16vector *pt, *pt2;
+s16vector points[vertices];
+s16vector r_points[vertices];
+
+u8bit xan = 0;
+u8bit yan = 0;
+u8bit zan = 0;
+
+FILE *disc;
+
+void main()
+{
+	boolean shut_down = no;
+	u8bit key;
+	s16bit i;
+
+	init_sincos();
+
+	disc = fopen("phongdat.dsc", "r");
+	if (disc == NULL)
+	{
+		printf("error: disc_init -> can't find \"phongdat.dsc\"\n");
+		exit(0);
+	}
+	printf("disc initialized\n");
+
+	init_anim();
+
+	points[0].x = size;
+	points[0].y = size;
+	points[0].z = size;
+	points[1].x = size;
+	points[1].y = -size;
+	points[1].z = size;
+	points[2].x = -size;
+	points[2].y = -size;
+	points[2].z = size;
+	points[3].x = -size;
+	points[3].y = size;
+	points[3].z = size;
+	points[4].x = size;
+	points[4].y = size;
+	points[4].z = -size;
+	points[5].x = size;
+	points[5].y = -size;
+	points[5].z = -size;
+	points[6].x = -size;
+	points[6].y = -size;
+	points[6].z = -size;
+	points[7].x = -size;
+	points[7].y = size;
+	points[7].z = -size;
+
+	while (shut_down == no)
+	{
+		if (kbhit())
+		{
+			key = getch();
+			switch (key)
+			{
+				case 27:
+					shut_down = yes;
+					break;
+			}
+		}
+
+		pt = &points[0];
+		pt2 = &r_points[0];
+
+		set_matrix();
+
+		for (i = 0; i < vertices; i++)
+		{
+			rotate();
+			/* move the shape back */
+			pt2->z += 250;
+			depth_emulate();
+			view_adjust();
+			draw_point();
+			pt++;
+			pt2++;
+		}
+
+		flip_page();
+		xan++;
+		yan++;
+		zan++;
+	}
+
+	kill_anim();
+}

@@ -1,0 +1,7 @@
+#define normal 0
+#define reverse 1
+
+#define line 0
+#define solid 1
+#define shaded 2
+#define gouraud 3

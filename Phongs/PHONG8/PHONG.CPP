@@ -1,0 +1,56 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
+#include <iostream.h>
+extern "C" {
+	#include "modex.h"
+}
+#include "types.h"
+#include "anim_sys.h"
+#include "vector.h"
+#include "light.h"
+#include "polygons.h"
+#include <math.h>
+#include <dos.h>
+#include "keyboard.h"
+
+extern u8bit xan;
+extern u8bit yan;
+extern u8bit zan;
+
+boolean shut_down = no;
+boolean space = no;
+
+#include "vertdata.dat"
+#include "polydata.dat"
+
+void main()
+{
+	vector *p;
+
+	init_sincos();
+	init_light(40,40,40);
+	p = init_vectors(8, &cube_points[0]);
+	init_polygons(p, 6, &cube_sides[0]);
+	cout << "3D system ready...\n**** hit enter to begin ****\n";
+	wait_for_key(13);
+	init_anim();
+
+	while (shut_down == no)
+	{
+		if (space) wait_for_key(' ');
+		if (kbhit()) key_action();
+
+		update_vectors();
+		update_polygons();
+
+		flip_page();
+
+		xan++;
+		yan++;
+		zan++;
+	}
+
+	kill_anim();
+}

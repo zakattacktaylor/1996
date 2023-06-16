@@ -1,0 +1,92 @@
+/* VECTOR.CPP
+	vectors are {x,y,z}
+	functions:
+		init_sincos
+		set_matrix
+		rotate
+		depth_emulate
+		compare
+*/
+#include <stdio.h>
+#include "types.h"
+#include "vector.h"
+#include "math.h"
+extern "C" {
+	#include "modex.h"
+}
+#include "anim_sys.h"
+
+extern u8bit xan;
+extern u8bit yan;
+extern u8bit zan;
+
+extern s16vector *pt;
+extern s16vector *pt2;
+
+float x_focus = 120;
+float y_focus = 120;
+
+float tsin[256];
+float tcos[256];
+
+float mx1, my1, mz1;
+float mx2, my2, mz2;
+float mx3, my3, mz3;
+
+void init_sincos()
+{
+	s16bit i;
+	float ang;
+
+	printf("sine/cosine initialized\n");
+
+	for (i = 0; i < 256; i++)
+	{
+		//ang = i * 360 / 256 * 3.1452 / 180;
+		ang = i / 40.7436642;
+		tsin[i] = sin(ang);
+		tcos[i] = cos(ang);
+	}
+}
+
+void set_matrix()
+{
+	mx1 = tsin[zan] * tsin[xan] * tsin[yan] + tcos[zan] * tcos[yan];
+	my1 = tcos[xan] * tsin[yan];
+	mz1 = tsin[zan] * tcos[yan] - tcos[zan] * tsin[xan] * tsin[yan];
+
+	mx2 = tsin[zan] * tsin[xan] * tcos[yan] - tcos[zan] * tsin[yan];
+	my2 = tcos[xan] * tcos[yan];
+	mz2 = -tcos[zan] * tsin[xan] * tcos[yan] - tsin[zan] * tsin[yan];
+
+	mx3 = -tsin[zan] * tcos[xan];
+	my3 = tsin[xan];
+	mz3 = tcos[zan] * tcos[xan];
+}
+
+void rotate()
+{
+	pt2->x = pt->x * mx1 + pt->y * my1 + pt->z * mz1;
+	pt2->y = pt->x * mx2 + pt->y * my2 + pt->z * mz2;
+	pt2->z = pt->x * mx3 + pt->y * my3 + pt->z * mz3;
+}
+
+void depth_emulate()
+{
+	/* make sure we can divide! */
+	if (pt2->z == 0) return;
+
+	pt2->x = pt2->x * x_focus / pt2->z;
+	pt2->y = pt2->y * y_focus / pt2->z;
+}
+
+void draw_point()
+{
+	set_point(pt2->x, pt2->y, 15);
+}
+
+void view_adjust()
+{
+	pt2->x += screen_width / 2;
+	pt2->y += screen_height / 2;
+}

@@ -1,0 +1,42 @@
+	for (ix=x1;ix<=x2;ix++)
+	{
+		ci=read_point(ix,y1);
+		if (!ci) {
+			set_point(ix,y1,prim);
+			oldcol=prim;
+			oldci=0;
+			goto next_pixel;
+		}
+		if (ci==oldci) {
+			set_point(ix,y1,oldcol);
+			goto next_pixel;
+		}
+		//now we know it is a special color!
+		nr=pal[ci][0]+pal[prim][0];
+		if (nr>28) nr=28;
+		ng=pal[ci][1]+pal[prim][1];
+		if (ng>20) ng=20;
+		nb=pal[ci][2]+pal[prim][2];
+		if (nb>4) nb=4;
+		//so we'll look through our palette to see if it is there
+		for (i=4;i<nextcol;i++) {
+			if ((pal[i][0]==nr)&&(pal[i][1]==ng)&&(pal[i][2]==nb)) {
+				//if it is already in the pal
+				oldcol=i;
+				oldci=ci;
+				set_point(ix,y1,i);
+				goto next_pixel;
+			}
+		}
+		//we couldn't find it so we'll make a new color!
+		pal[nextcol][0]=nr;
+		pal[nextcol][1]=ng;
+		pal[nextcol][2]=nb;
+		set_dac_register(nextcol,nr,ng,nb);
+		oldcol=nextcol;
+		oldci=ci;
+		set_point(ix,y1,nextcol);
+		nextcol++;
+		//if (nextcol>255)  this hopefully won't happen!
+next_pixel:
+	}

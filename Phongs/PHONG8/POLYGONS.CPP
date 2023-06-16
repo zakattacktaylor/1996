@@ -1,0 +1,330 @@
+/* POLYGONS.CPP
+*/
+
+#include <stdio.h>
+#include <dos.h>
+#include <stdlib.h>
+#include <iostream.h>
+#include "types.h"
+#include "line.h"
+#include "polygons.h"
+#include "vector.h"
+extern "C" {
+	#include "modex.h"
+}
+
+
+vector *p1;
+vector *p2;
+vector *point;
+
+s16bit d_buff[400];
+s16bit u_buff[400];
+s16bit d_color[400];
+s16bit u_color[400];
+
+s16bit polygons;
+s16bit *poly;
+s16bit *save_poly;
+s16bit *averages;
+s16bit *indexes;
+
+s16bit y_min;
+s16bit y_max;
+u16bit visible_polygons;
+
+void init_polygons(vector *pts, s16bit number, s16bit *data)
+{
+	point = pts;
+	poly = data;
+	save_poly = data;
+	averages = (s16bit*)calloc(number, sizeof(s16bit));
+	if (averages == NULL)
+	{
+		cout << "not enough memory -> init_polygons\n";
+		exit(0);
+	}
+	indexes = (s16bit*)calloc(number, sizeof(s16bit));
+	if (indexes == NULL)
+	{
+		cout << "not enough memory -> init_polygons\n";
+		exit(0);
+	}
+	polygons = number;
+
+	cout << "polygons initialized\n";
+}
+
+s16bit distance()
+{
+	s16bit i;
+	s16bit z;
+	s16bit first;
+
+	z = 0;
+	first = *poly;
+	if (point[*poly].z <= 0) return -1;
+	z += point[*poly].z;
+	poly++;
+
+	for (i = 1; i < 255; i++)
+	{
+		if (*poly == first)
+		{
+			poly++;
+			return z;
+		}
+		if (point[*poly].z <= 0) return -1;
+		z += point[*poly].z;
+		poly++;
+	}
+
+	return z;
+}
+
+void update_polygons()
+{
+	s16bit i;
+	u8bit color;
+
+	poly = save_poly;
+	visible_polygons = 0;
+
+	for (i = 0; i < polygons; i++)
+	{
+		averages[visible_polygons] = distance();
+		if (averages[visible_polygons] > 0)
+		{
+			indexes[visible_polygons] = i;
+			visible_polygons++;
+		}
+	}
+	/*
+	for (i = 0; i < visible_polygons; i++)
+		printf("%d, %d\n", averages[i], indexes[i]);
+	*/
+	sort_polygons();
+	/*
+	printf("SORT\n");
+	for (i = 0; i < visible_polygons; i++)
+		printf("%d, %d\n", averages[i], indexes[i]);
+	*/
+	for (i = 0; i < visible_polygons; i++)
+	{
+		poly = &save_poly[5*indexes[i]];
+		//color = 5 * indexes[i];
+		gouraud_polygon();
+		//fill_polygon(&color);
+		//line_polygon();
+	}
+}
+
+void sort_polygons()
+{
+	s16bit tmp,tmp1,i,k,j;
+	s16bit found=0;
+
+	for (k = 1; k < visible_polygons; k++)
+	{
+		tmp=averages[k];
+		tmp1=indexes[k];
+		i=k-1;
+		found=0;
+		while ((i>=0) &&(!found)) {
+			if (tmp > averages[i]) {
+				averages[i+1]=averages[i];
+				indexes[i+1]=indexes[i];
+				i--;
+			}
+			else found=1;
+		}
+		averages[i+1]=tmp;
+		indexes[i+1]=tmp1;
+	}
+}
+
+void fill_polygon(u8bit *color)
+{
+	s16bit i;
+	u8bit prev_dir;
+	u8bit dir;
+	s16bit *a, *b;
+	u8bit *ca, *cb;
+	u16bit first;
+
+	p1 = &point[0];
+	p2 = &point[0];
+	y_min = 20000;
+	y_max = -20000;
+	first = poly[0];
+
+	p1 += poly[0];
+	p2 += poly[1];
+
+	if (p1->y < y_min) y_min = p1->y;
+	if (p1->y > y_max) y_max = p1->y;
+
+	if (p1->y > p2->y)
+		trace_2d(p1->x, p1->y, p2->x, p2->y, &d_buff[0]);
+	else
+		trace_2d(p1->x, p1->y, p2->x, p2->y, &u_buff[0]);
+
+	p1 -= poly[0];
+	p2 -= poly[1];
+
+	for (i = 1; i < 255; i++)
+	{
+		p1 += poly[i];
+		p2 += poly[i+1];
+
+		if (p1->y < y_min) y_min = p1->y;
+		if (p1->y > y_max) y_max = p1->y;
+
+		if (p1->y > p2->y)
+			trace_2d(p1->x, p1->y, p2->x, p2->y, &d_buff[0]);
+		else
+			trace_2d(p1->x, p1->y, p2->x, p2->y, &u_buff[0]);
+
+		p1 -= poly[i];
+		p2 -= poly[i+1];
+
+		if (poly[i+1] == first) break;
+	}
+
+	if (y_min < 0) y_min = 0;
+	if (y_min > 399) return;
+	if (y_max < 0) return;
+	if (y_max > 399) y_max = 399;
+
+	a = &d_buff[y_min];
+	b = &u_buff[y_min];
+
+	for (i = y_min; i <= y_max; i++)
+	{
+
+		if (*a < 0) *a = 0;
+		if (*a > 319) *a = 319;
+		if (*b < 0) *b = 0;
+		if (*b > 319) *b = 319;
+
+		fill_block(*a, i, *b, i, *color);
+
+		a++;
+		b++;
+	}
+}
+
+void gouraud_polygon()
+{
+	s16bit i;
+	u8bit prev_dir;
+	u8bit dir;
+	s16bit *a, *b;
+	s16bit *ca, *cb;
+	u16bit first;
+	s16bit t;
+
+	p1 = &point[0];
+	p2 = &point[0];
+	y_min = 20000;
+	y_max = -20000;
+	first = poly[0];
+
+	p1 += poly[0];
+	p2 += poly[1];
+
+	if (p1->y < y_min) y_min = p1->y;
+	if (p1->y > y_max) y_max = p1->y;
+
+	if (p1->y > p2->y)
+	{
+		trace_2d(p1->x, p1->y, p2->x, p2->y, &d_buff[0]);
+		trace_2d(p1->color, p1->y, p2->color, p2->y, &d_color[0]);
+	}
+	else
+	{
+		trace_2d(p1->x, p1->y, p2->x, p2->y, &u_buff[0]);
+		trace_2d(p1->color, p1->y, p2->color, p2->y, &u_color[0]);
+	}
+
+	p1 -= poly[0];
+	p2 -= poly[1];
+
+	for (i = 1; i < 255; i++)
+	{
+		p1 += poly[i];
+		p2 += poly[i+1];
+
+		if (p1->y < y_min) y_min = p1->y;
+		if (p1->y > y_max) y_max = p1->y;
+
+		if (p1->y > p2->y)
+		{
+			trace_2d(p1->x, p1->y, p2->x, p2->y, &d_buff[0]);
+			trace_2d(p1->color, p1->y, p2->color, p2->y, &d_color[0]);
+		}
+		else
+		{
+			trace_2d(p1->x, p1->y, p2->x, p2->y, &u_buff[0]);
+			trace_2d(p1->color, p1->y, p2->color, p2->y, &u_color[0]);
+		}
+
+		p1 -= poly[i];
+		p2 -= poly[i+1];
+
+		if (poly[i+1] == first) break;
+	}
+
+	if (y_min < 0) y_min = 0;
+	if (y_min > 399) return;
+	if (y_max < 0) return;
+	if (y_max > 399) y_max = 399;
+
+	a = &d_buff[y_min];
+	b = &u_buff[y_min];
+	ca = &d_color[y_min];
+	cb = &u_color[y_min];
+
+	for (i = y_min; i <= y_max; i++)
+	{
+
+		/*if (*a < 0) *a = 0;
+		if (*a > 319) *a = 319;
+		if (*b < 0) *b = 0;
+		if (*b > 319) *b = 319;
+
+		if (*a > *b)
+		{
+			t = *a;
+			*a = *b;
+			*b = t;
+			t = *ca;
+			*ca = *cb;
+			*cb = t;
+		}
+		*/
+		gouraud_block(*ca, *a, *cb, *b, i);
+		//set_point(*a,i,*ca);
+		//set_point(*b,i,*cb);
+
+		a++;
+		b++;
+		ca++;
+		cb++;
+	}
+}
+
+void line_polygon()
+{
+	s16bit i;
+	u16bit first;
+
+	first = poly[0];
+	p1 = &point[0];
+
+	for (i = 0; i < 255; i++)
+	{
+		draw_line(p1[poly[i]].x, p1[poly[i]].y, p1[poly[i+1]].x, p1[poly[i+1]].y, p1[poly[i]].color);
+		if (poly[i+1] == first) return;
+	}
+}
